@@ -2,6 +2,7 @@ package com.echoplex_x.kusomeme.activities;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.Menu;
@@ -22,7 +23,7 @@ import java.net.URL;
 /**
  * Created by echoplex_x on 2016/11/10.
  */
-public class RecyclerViewActivity extends ActionBarActivity {
+public class RecyclerViewActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private MemeAdapter mMemeAdapter;
 
@@ -30,22 +31,16 @@ public class RecyclerViewActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_recycler);
-        MemeCollection memeCollection = initData();
-        // 获取真实数据适配器并设置数据
-        mMemeAdapter = new MemeAdapter(this);
-        mMemeAdapter.addItems(memeCollection.memelists,0);
-        // 包装适配器通知数据变更
-        mMemeAdapter.notifyDataSetChanged();
+        setContentView(R.layout.activity_recycler);
         initViews();
         initEvents();
+
     }
 
     private MemeCollection initData() {
         String json;
         json = LocalFileUtils.getStringFormAsset(this, "picture.json");
 
-        // 使用JsonTool工具将JSON数据封装到实例对象
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         MemeCollection memeCollection = gson.fromJson(json, MemeCollection.class);
@@ -88,6 +83,11 @@ public class RecyclerViewActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
+            MemeCollection memeCollection = initData();
+            // 获取真实数据适配器并设置数据
+            mMemeAdapter.addItems(memeCollection.memelists,0);
+            // 包装适配器通知数据变更
+            mMemeAdapter.notifyDataSetChanged();
             return true;
         }
 

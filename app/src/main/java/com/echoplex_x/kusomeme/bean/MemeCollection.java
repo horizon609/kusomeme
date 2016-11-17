@@ -11,11 +11,11 @@ public class MemeCollection {
 
     public class MemeItem {
         private int id;
-        private String url;
+        private String imgUrl;
 
         public MemeItem(int id, String url) {
             this.id = id;
-            this.url = url;
+            this.imgUrl = url;
         }
 
         public int getId() {
@@ -23,7 +23,7 @@ public class MemeCollection {
         }
 
         public String getUrl() {
-            return url;
+            return imgUrl;
         }
     }
 }

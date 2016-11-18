@@ -14,8 +14,19 @@ import com.echoplex_x.kusomeme.adapter.BaseRecyclerAdapter;
 import com.echoplex_x.kusomeme.adapter.MemeAdapter;
 import com.echoplex_x.kusomeme.bean.MemeCollection;
 import com.echoplex_x.kusomeme.utils.LocalFileUtils;
+import com.echoplex_x.kusomeme.utils.OKHttpHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static com.echoplex_x.kusomeme.utils.LocalFileUtils.getStringFormAsset;
 
 /**
  * Created by echoplex_x on 2016/11/10.
@@ -34,14 +45,28 @@ public class RecyclerViewActivity extends AppCompatActivity {
 
     }
 
-    private MemeCollection initData() {
-        String json;
-        json = LocalFileUtils.getStringFormAsset(this, "meme.json");
+    private MemeCollection initData() throws Exception {
+        Callable<MemeCollection> callable = new Callable<MemeCollection>() {
+            @Override
+            public MemeCollection call() {
+                String json = null;
+                try {
+                    json = OKHttpHelper.getStringFromUrl(RecyclerViewActivity.this, 20);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                GsonBuilder builder = new GsonBuilder();
+                Gson gson = builder.create();
+                MemeCollection memeCollection = gson.fromJson(json, MemeCollection.class);
+                return memeCollection;
+            }
+        };
 
-        GsonBuilder builder = new GsonBuilder();
-        Gson gson = builder.create();
-        MemeCollection memeCollection = gson.fromJson(json, MemeCollection.class);
-        return memeCollection;
+        FutureTask<MemeCollection> task = new FutureTask<MemeCollection>(callable);
+        Thread t = new Thread(task);
+        t.start();
+        return task.get();
+
     }
 
     private void initEvents() {
@@ -80,12 +105,17 @@ public class RecyclerViewActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            MemeCollection memeCollection = initData();
-            // 获取真实数据适配器并设置数据
-            mMemeAdapter.addItems(memeCollection.memelists,0);
-            // 包装适配器通知数据变更
-            mMemeAdapter.notifyDataSetChanged();
-            return true;
+            MemeCollection memeCollection = null;
+            try {
+                memeCollection = initData();
+                // 获取真实数据适配器并设置数据
+                mMemeAdapter.addItems(memeCollection.memelists, 0);
+                // 包装适配器通知数据变更
+                mMemeAdapter.notifyDataSetChanged();
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         return super.onOptionsItemSelected(item);

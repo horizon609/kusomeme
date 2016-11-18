@@ -13,10 +13,14 @@ import android.widget.TextView;
 
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.echoplex_x.kusomeme.R;
 import com.echoplex_x.kusomeme.bean.MemeCollection;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import static com.echoplex_x.kusomeme.R.id.textView;
 
@@ -86,9 +90,23 @@ public class MemeAdapter extends BaseRecyclerAdapter<MemeCollection.MemeItem, Me
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
-//        Glide.with(mContext).load(mDataList.get(position).getUrl()).into(holder.imageView);
-        Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.recycler_pic1);
-        holder.imageView.setImageBitmap(bitmap);
+        Glide.with(mContext).load(mDataList.get(position).getUrl()).listener(new RequestListener<String, GlideDrawable>() {
+            @Override
+            public boolean onException(Exception e, String model, Target<GlideDrawable> target, boolean isFirstResource) {
+//                        e.printStackTrace();
+
+                android.util.Log.d("GLIDE", String.format(Locale.ROOT,
+                        "onException(%s, %s, %s, %s)", e, model, target, isFirstResource), e);
+                return false;
+            }
+
+            @Override
+            public boolean onResourceReady(GlideDrawable resource, String model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                android.util.Log.d("GLIDE", String.format(Locale.ROOT,
+                        "onResourceReady(%s, %s, %s, %s, %s)", resource, model, target, isFromMemoryCache, isFirstResource));
+                return false;
+            }
+        }).into(holder.imageView);
         holder.position = position;
 
     }

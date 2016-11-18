@@ -1,7 +1,6 @@
 package com.echoplex_x.kusomeme.activities;
 
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
@@ -17,8 +16,6 @@ import com.echoplex_x.kusomeme.bean.MemeCollection;
 import com.echoplex_x.kusomeme.utils.LocalFileUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import java.net.URL;
 
 /**
  * Created by echoplex_x on 2016/11/10.
@@ -39,7 +36,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
 
     private MemeCollection initData() {
         String json;
-        json = LocalFileUtils.getStringFormAsset(this, "picture.json");
+        json = LocalFileUtils.getStringFormAsset(this, "meme.json");
 
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();

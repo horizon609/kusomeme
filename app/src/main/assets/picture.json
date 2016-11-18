@@ -1,61 +1,61 @@
 {
-    "memelists": [
+    "pictures": [
         {
 
             "id": "0",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic0.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic0.jpg"
         },
         {
             "id": "1",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic1.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic1.jpg"
         },
         {
             "id": "2",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic2.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic2.jpg"
         },
         {
             "id": "3",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic3.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic3.jpg"
         },
         {
             "id": "4",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic4.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic4.jpg"
         },
         {
             "id": "5",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic5.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic5.jpg"
         },
         {
             "id": "6",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic6.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic6.jpg"
         },
         {
             "id": "0",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic7.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic7.jpg"
         },
         {
             "id": "1",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic8.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic8.jpg"
         },
         {
             "id": "2",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic9.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic9.jpg"
         },
         {
             "id": "3",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic10.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic10.jpg"
         },
         {
             "id": "4",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic11.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic11.jpg"
         },
         {
             "id": "5",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic12.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic12.jpg"
         },
         {
             "id": "6",
-            "imgUrl": "https://github.com/horizon609/kusomeme/blob/master/pictures/recycler_pic13.jpg"
+            "imgUrl": "https://raw.githubusercontent.com/horizon609/kusomeme/master/meme/recycler_pic13.jpg"
         }
     ]
 }

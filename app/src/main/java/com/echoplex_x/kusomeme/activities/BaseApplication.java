@@ -1,6 +1,7 @@
 package com.echoplex_x.kusomeme.activities;
 
-import Application;
+
+import android.app.Application;
 
 /**
  * Created by echoplex_x on 2016/11/18.

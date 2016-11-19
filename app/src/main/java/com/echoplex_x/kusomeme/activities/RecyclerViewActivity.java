@@ -1,7 +1,9 @@
 package com.echoplex_x.kusomeme.activities;
 
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.Menu;
@@ -13,20 +15,13 @@ import com.echoplex_x.kusomeme.R;
 import com.echoplex_x.kusomeme.adapter.BaseRecyclerAdapter;
 import com.echoplex_x.kusomeme.adapter.MemeAdapter;
 import com.echoplex_x.kusomeme.bean.MemeCollection;
-import com.echoplex_x.kusomeme.utils.LocalFileUtils;
 import com.echoplex_x.kusomeme.utils.OKHttpHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static com.echoplex_x.kusomeme.utils.LocalFileUtils.getStringFormAsset;
 
 /**
  * Created by echoplex_x on 2016/11/10.
@@ -34,7 +29,9 @@ import static com.echoplex_x.kusomeme.utils.LocalFileUtils.getStringFormAsset;
 public class RecyclerViewActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private MemeAdapter mMemeAdapter;
-
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private LinearLayoutManager mlinearLayoutManager;
+    private boolean mIsRefreshing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +42,44 @@ public class RecyclerViewActivity extends AppCompatActivity {
 
     }
 
-    private MemeCollection initData() throws Exception {
+    private void showProgressBar() {
+        //加载颜色是循环播放的，只要没有完成刷新就会一直循环，color1>color2>color3>color4
+        mSwipeRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_light);
+        mSwipeRefreshLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setRefreshing(true);
+                mIsRefreshing = true;
+                try {
+                    getMemeData();
+                    showScrollToPosition();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+
+            @Override
+            public void onRefresh() {
+                clearMemeData();
+                try {
+                    getMemeData();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private void showScrollToPosition() {
+    }
+
+    private void clearMemeData() {
+        mMemeAdapter.clearItems();
+        mIsRefreshing = true;
+    }
+    private void getMemeData() throws Exception {
         Callable<MemeCollection> callable = new Callable<MemeCollection>() {
             @Override
             public MemeCollection call() {
@@ -65,9 +99,14 @@ public class RecyclerViewActivity extends AppCompatActivity {
         FutureTask<MemeCollection> task = new FutureTask<MemeCollection>(callable);
         Thread t = new Thread(task);
         t.start();
-        return task.get();
-
+        // 获取真实数据适配器并设置数据
+        mMemeAdapter.addItems(task.get().memelists, 0);
+        mSwipeRefreshLayout.setRefreshing(false);
+        mIsRefreshing = false;
+        // 包装适配器通知数据变更
+        mMemeAdapter.notifyDataSetChanged();
     }
+
 
     private void initEvents() {
         mMemeAdapter.setOnRecyclerViewListener(new BaseRecyclerAdapter.OnRecyclerViewListener() {
@@ -84,6 +123,8 @@ public class RecyclerViewActivity extends AppCompatActivity {
     }
 
     private void initViews() {
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
+        showProgressBar();
         mRecyclerView = (RecyclerView) this.findViewById(R.id.adapter_recycler_view);
 //        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL));
@@ -105,17 +146,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            MemeCollection memeCollection = null;
-            try {
-                memeCollection = initData();
-                // 获取真实数据适配器并设置数据
-                mMemeAdapter.addItems(memeCollection.memelists, 0);
-                // 包装适配器通知数据变更
-                mMemeAdapter.notifyDataSetChanged();
-                return true;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            return true;
         }
 
         return super.onOptionsItemSelected(item);

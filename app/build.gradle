@@ -37,4 +37,6 @@ dependencies {
     compile 'com.facebook.stetho:stetho-okhttp3:1.3.1'//为了解决java.lang.NoClassDefFoundError: okhttp3.internal.Platform，可能是retrofit和okhttp的方法数太多的缘故
     //暂时还用不到multidex
     compile 'com.android.support:multidex:1.0.1'
+    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
+    compile 'com.github.cpiz:BubbleView:1.0.1'
 }

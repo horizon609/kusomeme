@@ -63,7 +63,7 @@ public class MemeAdapter extends BaseRecyclerAdapter<MemeCollection.MemeItem, Me
         @Override
         public boolean onLongClick(View v) {
             if (null != onRecyclerViewListener) {
-                return onRecyclerViewListener.onItemLongClick(position);
+                return onRecyclerViewListener.onItemLongClick(v,position);
             }
             return false;
         }

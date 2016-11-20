@@ -133,6 +133,6 @@ public abstract class BaseRecyclerAdapter<T,VH extends RecyclerView.ViewHolder> 
          *
          * @param position
          */
-        boolean onItemLongClick(int position);
+        boolean onItemLongClick(View view,int position);
     }
 }

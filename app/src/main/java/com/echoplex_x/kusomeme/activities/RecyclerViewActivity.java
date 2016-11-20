@@ -1,25 +1,33 @@
 package com.echoplex_x.kusomeme.activities;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.cpiz.android.bubbleview.BubblePopupWindow;
+import com.cpiz.android.bubbleview.BubbleStyle;
+import com.cpiz.android.bubbleview.BubbleTextView;
 import com.echoplex_x.kusomeme.R;
 import com.echoplex_x.kusomeme.adapter.BaseRecyclerAdapter;
 import com.echoplex_x.kusomeme.adapter.MemeAdapter;
 import com.echoplex_x.kusomeme.bean.MemeCollection;
+import com.echoplex_x.kusomeme.utils.DownLoadHelper;
 import com.echoplex_x.kusomeme.utils.OKHttpHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
@@ -32,6 +40,12 @@ public class RecyclerViewActivity extends AppCompatActivity {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private LinearLayoutManager mlinearLayoutManager;
     private boolean mIsRefreshing = false;
+    List<MemeCollection.MemeItem> mMemelist;
+    View rootView;
+    BubbleTextView mBubbleTextView;
+    BubblePopupWindow mBubblePopupWindow;
+    private int mPosition;
+    private ProgressDialog mSaveDialog = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +66,6 @@ public class RecyclerViewActivity extends AppCompatActivity {
                 mIsRefreshing = true;
                 try {
                     getMemeData();
-                    showScrollToPosition();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -70,9 +83,8 @@ public class RecyclerViewActivity extends AppCompatActivity {
                 }
             }
         });
-    }
 
-    private void showScrollToPosition() {
+
     }
 
     private void clearMemeData() {
@@ -100,13 +112,13 @@ public class RecyclerViewActivity extends AppCompatActivity {
         Thread t = new Thread(task);
         t.start();
         // 获取真实数据适配器并设置数据
-        mMemeAdapter.addItems(task.get().memelists, 0);
+        mMemelist = task.get().memelists;
+        mMemeAdapter.addItems(mMemelist, 0);
         mSwipeRefreshLayout.setRefreshing(false);
         mIsRefreshing = false;
         // 包装适配器通知数据变更
         mMemeAdapter.notifyDataSetChanged();
     }
-
 
     private void initEvents() {
         mMemeAdapter.setOnRecyclerViewListener(new BaseRecyclerAdapter.OnRecyclerViewListener() {
@@ -116,23 +128,40 @@ public class RecyclerViewActivity extends AppCompatActivity {
             }
 
             @Override
-            public boolean onItemLongClick(int position) {
+            public boolean onItemLongClick(View view, final int position) {
+                mBubblePopupWindow.showArrowTo(view, BubbleStyle.ArrowDirection.Up);
+                Log.e("wt","mPosition:" + mPosition);
+                mPosition = position;
                 return false;
-            }//后续收藏
+            }
+
+        });
+        rootView.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                //下载meme
+                DownLoadHelper.onDownLoad(mMemelist.get(mPosition).getUrl(),RecyclerViewActivity.this);
+                Log.e("wt","开始下载");
+            }
         });
     }
 
     private void initViews() {
+        initPop();
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
         showProgressBar();
         mRecyclerView = (RecyclerView) this.findViewById(R.id.adapter_recycler_view);
-//        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL));
-//        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
 
         // 创建RecyclerView的数据适配器
         mMemeAdapter = new MemeAdapter(this);
         mRecyclerView.setAdapter(mMemeAdapter);
+    }
+
+    private void initPop() {
+        rootView = LayoutInflater.from(this).inflate(R.layout.simple_text_bubble, null);
+        mBubbleTextView = (BubbleTextView) rootView.findViewById(R.id.popup_bubble);
+        mBubblePopupWindow = new BubblePopupWindow(rootView, mBubbleTextView);
+        mBubblePopupWindow.setCancelOnLater(3000);
     }
 
     @Override

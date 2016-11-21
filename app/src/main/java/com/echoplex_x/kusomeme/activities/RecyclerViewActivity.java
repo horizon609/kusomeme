@@ -168,6 +168,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 Toast.makeText(RecyclerViewActivity.this,"表情保存成功~",Toast.LENGTH_SHORT).show();
+                                mBubblePopupWindow.dismiss();
                             }
                         });
 
@@ -182,6 +183,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 Toast.makeText(RecyclerViewActivity.this,"表情保存失败，请稍后再试~",Toast.LENGTH_SHORT).show();
+                                mBubblePopupWindow.dismiss();
                             }
                         });
 

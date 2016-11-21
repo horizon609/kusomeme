@@ -1,7 +1,10 @@
 package com.echoplex_x.kusomeme.activities;
 
 import android.app.ProgressDialog;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,15 +24,20 @@ import com.echoplex_x.kusomeme.R;
 import com.echoplex_x.kusomeme.adapter.BaseRecyclerAdapter;
 import com.echoplex_x.kusomeme.adapter.MemeAdapter;
 import com.echoplex_x.kusomeme.bean.MemeCollection;
+import com.echoplex_x.kusomeme.network.api.DownLoadImageService;
+import com.echoplex_x.kusomeme.network.api.ImageDownLoadCallBack;
 import com.echoplex_x.kusomeme.utils.DownLoadHelper;
 import com.echoplex_x.kusomeme.utils.OKHttpHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
+
+
 
 /**
  * Created by echoplex_x on 2016/11/10.
@@ -45,7 +53,6 @@ public class RecyclerViewActivity extends AppCompatActivity {
     BubbleTextView mBubbleTextView;
     BubblePopupWindow mBubblePopupWindow;
     private int mPosition;
-    private ProgressDialog mSaveDialog = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +60,6 @@ public class RecyclerViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_recycler);
         initViews();
         initEvents();
-
     }
 
     private void showProgressBar() {
@@ -139,7 +145,48 @@ public class RecyclerViewActivity extends AppCompatActivity {
         rootView.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 //下载meme
-                DownLoadHelper.onDownLoad(mMemelist.get(mPosition).getUrl(),RecyclerViewActivity.this);
+                DownLoadHelper.onDownLoad(mMemelist.get(mPosition).getUrl(),RecyclerViewActivity.this,new ImageDownLoadCallBack() {
+
+                    @Override
+                    public void onDownLoadSuccess(File file, DownLoadImageService.IMAGE_TYPE type) {
+                        String fileName = null;
+                        switch (type) {
+                            case GIF:
+                                fileName = System.currentTimeMillis() + ".gif";
+                                break;
+                            case JPEG:
+                                fileName = System.currentTimeMillis() + ".jpg";
+                            default:
+                                break;
+                        }
+                        Log.e("wt",Thread.currentThread().getName()+": 准备现实toast");
+                        //这里把图片保存在/storage/emulated/0/Pictures/下，可以立即刷新gallery中的图片，而在自己新建的的外部路径下无法立即更新，后续解决
+                        //使用google示例https://developer.android.com/reference/android/os/Environment.html#getExternalStoragePublicDirectory%28java.lang.String%29
+                        DownLoadHelper.saveImageToGallery(RecyclerViewActivity.this
+                                , file,fileName);
+                        RecyclerViewActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(RecyclerViewActivity.this,"表情保存成功~",Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                        Log.e("wt", Thread.currentThread().getName() + " :保存成功");
+                    }
+
+                    @Override
+                    public void onDownLoadFailed() {
+                        // 图片保存失败
+                        Log.e("wt","保存失败");
+                        RecyclerViewActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(RecyclerViewActivity.this,"表情保存失败，请稍后再试~",Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                    }
+                });
                 Log.e("wt","开始下载");
             }
         });
@@ -155,6 +202,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
         // 创建RecyclerView的数据适配器
         mMemeAdapter = new MemeAdapter(this);
         mRecyclerView.setAdapter(mMemeAdapter);
+
     }
 
     private void initPop() {

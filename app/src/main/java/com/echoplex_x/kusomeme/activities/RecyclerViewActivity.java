@@ -1,10 +1,12 @@
 package com.echoplex_x.kusomeme.activities;
 
-import android.app.ProgressDialog;
+import android.support.v7.widget.RecyclerView;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.os.Environment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -32,9 +34,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 
@@ -48,11 +53,15 @@ public class RecyclerViewActivity extends AppCompatActivity {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private LinearLayoutManager mlinearLayoutManager;
     private boolean mIsRefreshing = false;
+    private static final int THUMB_SIZE = 150;
     List<MemeCollection.MemeItem> mMemelist;
     View rootView;
     BubbleTextView mBubbleTextView;
+    BubbleTextView mBubbleTextView2;
     BubblePopupWindow mBubblePopupWindow;
+    Uri mImpUri;
     private int mPosition;
+    private ExecutorService mShareExecutorService = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,6 +135,25 @@ public class RecyclerViewActivity extends AppCompatActivity {
         mMemeAdapter.notifyDataSetChanged();
     }
 
+    private void share(Uri uri) {
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "分享");
+        //这一句会把图片变成文件，可以调出返回第三方应用
+//        shareIntent.putExtra(Intent.EXTRA_TEXT, "来自「kusomeme」的分享:" + "test");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        shareIntent.setType("image/*");
+        // Launch sharing dialog for image
+        startActivity(Intent.createChooser(shareIntent, "Share meme"));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mShareExecutorService.shutdown();
+    }
+
+
     private void initEvents() {
         mMemeAdapter.setOnRecyclerViewListener(new BaseRecyclerAdapter.OnRecyclerViewListener() {
             @Override
@@ -134,15 +162,24 @@ public class RecyclerViewActivity extends AppCompatActivity {
             }
 
             @Override
-            public boolean onItemLongClick(View view, final int position) {
+            public boolean onItemLongClick(final View view, final int position) {
                 mBubblePopupWindow.showArrowTo(view, BubbleStyle.ArrowDirection.Up);
                 Log.e("wt","mPosition:" + mPosition);
                 mPosition = position;
+
+                mShareExecutorService.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        Bitmap bitmap = convertViewToBitmap(view);
+                        mImpUri = getUriFromBitmap(bitmap);
+                    }
+                });
+
                 return false;
             }
 
         });
-        rootView.setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.popup_bubble).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 //下载meme
                 DownLoadHelper.onDownLoad(mMemelist.get(mPosition).getUrl(),RecyclerViewActivity.this,new ImageDownLoadCallBack() {
@@ -192,6 +229,38 @@ public class RecyclerViewActivity extends AppCompatActivity {
                 Log.e("wt","开始下载");
             }
         });
+        rootView.findViewById(R.id.popup_bubble2).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                share(mImpUri);
+            }
+        });
+    }
+
+    public static Bitmap convertViewToBitmap(View view){
+//        view.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+//        view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
+//        view.buildDrawingCache();
+//        Bitmap bitmap = view.getDrawingCache();
+//        return bitmap;
+        view.buildDrawingCache();
+        Bitmap bitmap = view.getDrawingCache();
+        return bitmap;
+    }
+
+    public Uri getUriFromBitmap(Bitmap bitmap) {
+        Uri bmpUri = null;
+        try {
+            File file =  new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS), "share_image_" + System.currentTimeMillis() + ".png");
+            file.getParentFile().mkdirs();
+            FileOutputStream out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+            out.close();
+            bmpUri = Uri.fromFile(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bmpUri;
     }
 
     private void initViews() {
@@ -210,6 +279,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
     private void initPop() {
         rootView = LayoutInflater.from(this).inflate(R.layout.simple_text_bubble, null);
         mBubbleTextView = (BubbleTextView) rootView.findViewById(R.id.popup_bubble);
+        mBubbleTextView2 = (BubbleTextView) rootView.findViewById(R.id.popup_bubble2);
         mBubblePopupWindow = new BubblePopupWindow(rootView, mBubbleTextView);
         mBubblePopupWindow.setCancelOnLater(3000);
     }

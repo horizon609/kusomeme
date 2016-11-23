@@ -163,7 +163,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
 
             @Override
             public boolean onItemLongClick(final View view, final int position) {
-                mBubblePopupWindow.showArrowTo(view, BubbleStyle.ArrowDirection.Up);
+                mBubblePopupWindow.showArrowTo(view, BubbleStyle.ArrowDirection.Down);
                 Log.e("wt","mPosition:" + mPosition);
                 mPosition = position;
 

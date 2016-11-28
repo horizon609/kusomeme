@@ -1,5 +1,6 @@
 package com.echoplex_x.kusomeme.activities;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -30,6 +31,8 @@ import com.echoplex_x.kusomeme.network.api.DownLoadImageService;
 import com.echoplex_x.kusomeme.network.api.ImageDownLoadCallBack;
 import com.echoplex_x.kusomeme.utils.DownLoadHelper;
 import com.echoplex_x.kusomeme.utils.OKHttpHelper;
+import com.echoplex_x.kusomeme.utils.RetrofitHelper;
+import com.echoplex_x.kusomeme.utils.SnackbarUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -42,6 +45,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+import rx.android.schedulers.AndroidSchedulers;
 
 
 /**
@@ -62,10 +68,12 @@ public class RecyclerViewActivity extends AppCompatActivity {
     Uri mImpUri;
     private int mPosition;
     private ExecutorService mShareExecutorService = Executors.newSingleThreadExecutor();
+    private Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mContext = this;
         setContentView(R.layout.activity_recycler);
         initViews();
         initEvents();
@@ -107,30 +115,39 @@ public class RecyclerViewActivity extends AppCompatActivity {
         mIsRefreshing = true;
     }
     private void getMemeData() throws Exception {
-        Callable<MemeCollection> callable = new Callable<MemeCollection>() {
-            @Override
-            public MemeCollection call() {
-                String json = null;
-                try {
-                    json = OKHttpHelper.getStringFromUrl(RecyclerViewActivity.this, 20);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                GsonBuilder builder = new GsonBuilder();
-                Gson gson = builder.create();
-                MemeCollection memeCollection = gson.fromJson(json, MemeCollection.class);
-                return memeCollection;
-            }
-        };
+        RetrofitHelper.geMemeApi().getMemeInfo(20)
+        .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<MemeCollection>()
+                {
 
-        FutureTask<MemeCollection> task = new FutureTask<MemeCollection>(callable);
-        Thread t = new Thread(task);
-        t.start();
-        // 获取真实数据适配器并设置数据
-        mMemelist = task.get().memelists;
-        mMemeAdapter.addItems(mMemelist, 0);
+                    @Override
+                    public void call(MemeCollection memeCollection)
+                    {
+                        mMemelist = memeCollection.getMemelists();
+                        finishTask();
+                    }
+                }, new Action1<Throwable>()
+                {
+
+                    @Override
+                    public void call(Throwable throwable)
+                    {
+                        initEmptyView();
+                    }
+                });
+    }
+
+    private void initEmptyView() {
+        mSwipeRefreshLayout.setRefreshing(false);
+        SnackbarUtil.showMessage(mRecyclerView, "数据加载失败,请重新加载或者检查网络是否链接");
+    }
+
+    private void finishTask() {
         mSwipeRefreshLayout.setRefreshing(false);
         mIsRefreshing = false;
+        // 获取真实数据适配器并设置数据
+        mMemeAdapter.addItems(mMemelist, 0);
         // 包装适配器通知数据变更
         mMemeAdapter.notifyDataSetChanged();
     }

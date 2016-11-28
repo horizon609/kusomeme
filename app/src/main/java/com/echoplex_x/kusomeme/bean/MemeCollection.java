@@ -7,7 +7,11 @@ import java.util.List;
  */
 
 public class MemeCollection {
-    public List<MemeItem> memelists;
+    public List<MemeItem> getMemelists() {
+        return memelists;
+    }
+
+    private List<MemeItem> memelists;
 
     public class MemeItem {
         private int id;

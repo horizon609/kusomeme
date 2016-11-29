@@ -1,5 +1,7 @@
 package com.echoplex_x.kusomeme.network;
 
+import android.util.Log;
+
 import com.echoplex_x.kusomeme.common.BaseApplication;
 import com.facebook.stetho.okhttp3.StethoInterceptor;
 
@@ -19,6 +21,8 @@ import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 public class RetrofitHelper {
     private static final String API_BASE_URL = "http://123.56.233.178:30000/";
     private static OkHttpClient mOkHttpClient;
+    private static MemeService mMemeService;
+    private static Retrofit mRetrofit;
 
     static{
         initOkHttpClient();
@@ -32,14 +36,19 @@ public class RetrofitHelper {
 
     public static MemeService geMemeApi()
     {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(API_BASE_URL)
-                .client(mOkHttpClient)
-                .addConverterFactory(GsonConverterFactory.create())
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                .build();
-
-        return retrofit.create(MemeService.class);
+        if(mRetrofit == null){
+            synchronized (RetrofitHelper.class){
+                if(mRetrofit == null){
+                    mRetrofit = new Retrofit.Builder()
+                            .baseUrl(API_BASE_URL)
+                            .client(mOkHttpClient)
+                            .addConverterFactory(GsonConverterFactory.create())
+                            .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                            .build();
+                }
+            }
+        }
+        return mRetrofit.create(MemeService.class);
     }
 
     /**

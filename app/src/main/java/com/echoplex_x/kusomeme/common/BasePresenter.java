@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.echoplex_x.kusomeme;
+package com.echoplex_x.kusomeme.common;
 
-public interface BaseView<T> {
+public interface BasePresenter {
 
-    void setPresenter(T presenter);
+    void start();
 
 }

@@ -1,15 +1,13 @@
-package com.echoplex_x.kusomeme.activities;
+package com.echoplex_x.kusomeme.showmeme;
 
-import android.app.Fragment;
-import android.content.Context;
-import android.content.Intent;
+import android.support.annotation.Nullable;
+import android.support.v7.widget.RecyclerView;
+
+import android.support.v4.app.Fragment;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,29 +22,24 @@ import com.echoplex_x.kusomeme.R;
 import com.echoplex_x.kusomeme.adapter.BaseRecyclerAdapter;
 import com.echoplex_x.kusomeme.adapter.MemeAdapter;
 import com.echoplex_x.kusomeme.bean.MemeCollection;
-import com.echoplex_x.kusomeme.utils.RetrofitHelper;
 import com.echoplex_x.kusomeme.utils.SnackbarUtil;
 import com.echoplex_x.kusomeme.utils.Util;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 /**
  * Created by Win10-PC on 2016/11/28.
  */
 
-public class ShowMemeFragment extends Fragment implements ShowMemeContract.View{
+public class ShowMemeFragment extends Fragment implements ShowMemeContract.View {
+    private final String TAG = "ShowMemeFragment";
     private ShowMemeContract.Presenter mPresenter;
     private RecyclerView mRecyclerView;
     private MemeAdapter mMemeAdapter;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private static ShowMemeFragment mShowMemeFragment;
     private boolean mIsRefreshing = false;
 
     View rootView;
@@ -56,35 +49,78 @@ public class ShowMemeFragment extends Fragment implements ShowMemeContract.View{
     private ExecutorService mShareExecutorService = Executors.newSingleThreadExecutor();
 
     private int mPosition;
-    List<MemeCollection.MemeItem> mMemelist;
+
     private Uri mImpUri;
 
+    public static ShowMemeFragment getInstance() {
+        if (mShowMemeFragment == null) {
+            synchronized (ShowMemeFragment.class) {
+                if (mShowMemeFragment == null) {
+                    mShowMemeFragment = new ShowMemeFragment();
+                }
+            }
+        }
+        return mShowMemeFragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initPop();
+        initAdapter();
+        initEvents();
+    }
+
+    private void initAdapter() {
+        mMemeAdapter = new MemeAdapter(getActivity());
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_recycler, container, false);
         initViews(view);
-        initEvents();
         return view;
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        //在fragment中，对SwipeRefreshLayout的初始化只能放在onCreate和onCreateView之后.否则就无法得到fragment的view
+        //且不要放在onResume内，否则每次点亮屏幕都需要执行一次
+        initSwipeRefreshLayout();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        mPresenter.start();
     }
 
     private void initViews(View view) {
-        initPop();
-        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh_layout);
-        showProgressBar();
         mRecyclerView = (RecyclerView) view.findViewById(R.id.adapter_recycler_view);
         mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL));
-
         // 创建RecyclerView的数据适配器
-        mMemeAdapter = new MemeAdapter(getActivity());
         mRecyclerView.setAdapter(mMemeAdapter);
 
     }
+
+    private void initSwipeRefreshLayout() {
+        if (getView() == null) {
+            return;
+        }
+        mSwipeRefreshLayout = (SwipeRefreshLayout) getView().findViewById(R.id.swipe_refresh_layout);
+        //加载颜色是循环播放的，只要没有完成刷新就会一直循环，color1>color2>color3>color4
+        mSwipeRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_light);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+
+            @Override
+            public void onRefresh() {
+                setRefreshing(true);
+                showMemeData();
+            }
+        });
+    }
+
     private void initPop() {
         rootView = LayoutInflater.from(getActivity()).inflate(R.layout.simple_text_bubble, null);
         mBubbleTextView = (BubbleTextView) rootView.findViewById(R.id.popup_bubble);
@@ -103,7 +139,7 @@ public class ShowMemeFragment extends Fragment implements ShowMemeContract.View{
             @Override
             public boolean onItemLongClick(final View view, final int position) {
                 showPop(view);
-                Log.e("wt","mPosition:" + mPosition);
+                Log.d(TAG, "mPosition:" + mPosition);
                 mPosition = position;
 
                 mShareExecutorService.submit(new Runnable() {
@@ -120,8 +156,7 @@ public class ShowMemeFragment extends Fragment implements ShowMemeContract.View{
         });
         rootView.findViewById(R.id.popup_bubble).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                //下载meme
-                mPresenter.downLoadMeme();
+                mPresenter.downLoadMeme(mMemeAdapter.getDataList(), mPosition);
             }
         });
         rootView.findViewById(R.id.popup_bubble2).setOnClickListener(new View.OnClickListener() {
@@ -134,46 +169,26 @@ public class ShowMemeFragment extends Fragment implements ShowMemeContract.View{
 
     @Override
     public void showPop(View view) {
+        if (view == null) {
+            return;
+        }
         mBubblePopupWindow.showArrowTo(view, BubbleStyle.ArrowDirection.Down);
     }
 
     @Override
-    public void hidePop(){
+    public void hidePop() {
         mBubblePopupWindow.dismiss();
     }
 
     @Override
     public void showProgressBar() {
-        //加载颜色是循环播放的，只要没有完成刷新就会一直循环，color1>color2>color3>color4
-        mSwipeRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_light);
-        mSwipeRefreshLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                mSwipeRefreshLayout.setRefreshing(true);
-                mIsRefreshing = true;
-                try {
-                    getMemeData();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-
-            @Override
-            public void onRefresh() {
-                clearMemeData();
-                try {
-                    getMemeData();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        mSwipeRefreshLayout.setRefreshing(true);
     }
+
 
     @Override
     public void hideProgressBar() {
+        setRefreshing(false);
         mSwipeRefreshLayout.setRefreshing(false);
     }
 
@@ -184,51 +199,50 @@ public class ShowMemeFragment extends Fragment implements ShowMemeContract.View{
     }
 
     @Override
-    public void setRefreshing(boolean refreshing) {
-        mIsRefreshing = refreshing;
+    public void showMemeData() {
+        if (isRefreshing()) {
+            showProgressBar();
+            clearMemeData();
+            try {
+                mPresenter.populateMemeData();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }else{
+            if(mMemeAdapter.getDataList().size()==0){
+                try {
+                    showProgressBar();
+                    mPresenter.populateMemeData();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
     }
 
-    private void clearMemeData() {
+    @Override
+    public void clearMemeData() {
         mMemeAdapter.clearItems();
-        mIsRefreshing = true;
     }
 
-    private void getMemeData() throws Exception {
-        RetrofitHelper.geMemeApi().getMemeInfo(20)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<MemeCollection>()
-                {
-
-                    @Override
-                    public void call(MemeCollection memeCollection)
-                    {
-                        mMemelist = memeCollection.getMemelists();
-                        finishTask();
-                    }
-                }, new Action1<Throwable>()
-                {
-
-                    @Override
-                    public void call(Throwable throwable)
-                    {
-                        showNetworkError();
-                    }
-                });
+    @Override
+    public boolean isRefreshing() {
+        return mIsRefreshing;
     }
 
+    @Override
+    public void setRefreshing(boolean isRefreshing) {
+        mIsRefreshing = isRefreshing;
+    }
 
-
-    private void finishTask() {
-        mSwipeRefreshLayout.setRefreshing(false);
-        mIsRefreshing = false;
+    @Override
+    public void addMemes(List<MemeCollection.MemeItem> memeItemList) {
         // 获取真实数据适配器并设置数据
-        mMemeAdapter.addItems(mMemelist, 0);
+        mMemeAdapter.addItems(memeItemList, 0);
         // 包装适配器通知数据变更
         mMemeAdapter.notifyDataSetChanged();
     }
-
-
 
     @Override
     public void setPresenter(ShowMemeContract.Presenter presenter) {

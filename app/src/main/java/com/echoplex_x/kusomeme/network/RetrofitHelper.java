@@ -1,6 +1,6 @@
-package com.echoplex_x.kusomeme.utils;
+package com.echoplex_x.kusomeme.network;
 
-import com.echoplex_x.kusomeme.activities.BaseApplication;
+import com.echoplex_x.kusomeme.common.BaseApplication;
 import com.facebook.stetho.okhttp3.StethoInterceptor;
 
 import java.io.File;
@@ -46,8 +46,6 @@ public class RetrofitHelper {
      * 初始化OKHttpClient
      * 设置缓存
      * 设置超时时间
-     * 设置打印日志
-     * 设置UA拦截器
      */
     private static void initOkHttpClient()
     {

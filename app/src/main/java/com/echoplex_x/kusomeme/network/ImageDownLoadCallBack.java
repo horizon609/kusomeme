@@ -1,10 +1,8 @@
-package com.echoplex_x.kusomeme.network.api;
+package com.echoplex_x.kusomeme.network;
 
-import android.graphics.Bitmap;
+
 
 import java.io.File;
-
-import static android.R.attr.type;
 
 /**
  * Created by Win10-PC on 2016/11/19.

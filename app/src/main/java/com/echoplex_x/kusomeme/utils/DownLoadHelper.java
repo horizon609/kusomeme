@@ -7,8 +7,8 @@ import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
-import com.echoplex_x.kusomeme.network.api.DownLoadImageService;
-import com.echoplex_x.kusomeme.network.api.ImageDownLoadCallBack;
+import com.echoplex_x.kusomeme.network.DownLoadImageService;
+import com.echoplex_x.kusomeme.network.ImageDownLoadCallBack;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,35 +49,6 @@ public class DownLoadHelper {
         //启动图片下载线程
         runOnQueue(service);
     }
-
-    private static void createExternalStoragePublicPicture(Context context, Bitmap bitmap) {
-        File appDir = new File(Environment.getExternalStorageDirectory(), MEME_STORE_PATH);
-        if (!appDir.exists()) {
-            appDir.mkdir();
-        }
-        String fileName = System.currentTimeMillis() + ".jpg";
-        File file = new File(appDir, fileName);
-        try {
-            FileOutputStream fos = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-            fos.flush();
-            fos.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        MediaScannerConnection.scanFile(context,
-                new String[]{file.toString()}, null,
-                new MediaScannerConnection.OnScanCompletedListener() {
-                    public void onScanCompleted(String path, Uri uri) {
-                        Log.i("ExternalStorage", "Scanned " + path + ":");
-                        Log.i("ExternalStorage", "-> uri=" + uri);
-                    }
-                });
-
-    }
-
 
     public static void saveImageToGallery(Context context, File memeFile, String fileName) {
         File path = Environment.getExternalStoragePublicDirectory(

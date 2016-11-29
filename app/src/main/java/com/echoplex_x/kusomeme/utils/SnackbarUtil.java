@@ -6,9 +6,7 @@ import android.view.View;
 public class SnackbarUtil
 {
 
-    public static void showMessage(View view, String text)
-    {
-
+    public static void showMessage(View view, String text) {
         Snackbar.make(view, text, Snackbar.LENGTH_SHORT).show();
     }
 }

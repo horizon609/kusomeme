@@ -1,4 +1,4 @@
-package com.echoplex_x.kusomeme.utils;
+package com.echoplex_x.kusomeme.network;
 
 import com.echoplex_x.kusomeme.bean.MemeCollection;
 

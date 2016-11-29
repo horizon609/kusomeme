@@ -1,29 +1,19 @@
-package com.echoplex_x.kusomeme.network.api;
+package com.echoplex_x.kusomeme.network;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 
 import java.io.File;
-
-import static android.support.v7.widget.StaggeredGridLayoutManager.TAG;
-import static com.bumptech.glide.load.resource.bitmap.ImageHeaderParser.ImageType.GIF;
-import static com.bumptech.glide.load.resource.bitmap.ImageHeaderParser.ImageType.JPEG;
-import static java.lang.System.load;
 
 /**
  * Created by Win10-PC on 2016/11/19.
  */
 
 public class DownLoadImageService implements Runnable {
+    private final String TAG = "DownLoadImageService";
     private String mUrl;
     private Context mContext;
     private ImageDownLoadCallBack mCallBack;
@@ -54,8 +44,8 @@ public class DownLoadImageService implements Runnable {
             e.printStackTrace();
         } finally {
             if (file != null) {
-                Log.e("wt", "得到meme文件");
-                Log.e("wt", "mCallBack:" + mCallBack);
+                Log.d(TAG, "得到meme文件");
+                Log.d(TAG, "mCallBack:" + mCallBack);
                 mCallBack.onDownLoadSuccess(file, type);
             } else {
                 mCallBack.onDownLoadFailed();

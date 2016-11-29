@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/id_fragment_title"
-        android:name="com.echoplex_x.kusomeme.activities.ShowMemeFragment"
+        android:name="com.echoplex_x.kusomeme.showmeme.ShowMemeFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </RelativeLayout>

@@ -114,17 +114,9 @@ public class MemeAdapter extends BaseRecyclerAdapter<MemeCollection.MemeItem, Me
 
     }
 
-    // BEGIN_INCLUDE(recyclerViewOnBindViewHolder)
-
-    // Replace the contents of a view (invoked by the layout manager)
-    // END_INCLUDE(recyclerViewOnCreateViewHolder)
-
-
-    // END_INCLUDE(recyclerViewOnBindViewHolder)
-
-    // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
         return mDataList.size();
     }
+
 }

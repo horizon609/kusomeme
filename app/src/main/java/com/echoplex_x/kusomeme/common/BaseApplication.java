@@ -1,4 +1,4 @@
-package com.echoplex_x.kusomeme.activities;
+package com.echoplex_x.kusomeme.common;
 
 
 import android.app.Application;

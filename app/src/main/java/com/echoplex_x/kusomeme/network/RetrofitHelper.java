@@ -21,7 +21,6 @@ import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 public class RetrofitHelper {
     private static final String API_BASE_URL = "http://123.56.233.178:30000/";
     private static OkHttpClient mOkHttpClient;
-    private static MemeService mMemeService;
     private static Retrofit mRetrofit;
 
     static{

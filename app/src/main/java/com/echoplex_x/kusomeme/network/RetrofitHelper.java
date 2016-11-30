@@ -1,7 +1,5 @@
 package com.echoplex_x.kusomeme.network;
 
-import android.util.Log;
-
 import com.echoplex_x.kusomeme.common.BaseApplication;
 import com.facebook.stetho.okhttp3.StethoInterceptor;
 
@@ -21,11 +19,7 @@ import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 public class RetrofitHelper {
     private static final String API_BASE_URL = "http://123.56.233.178:30000/";
     private static OkHttpClient mOkHttpClient;
-    private static Retrofit mRetrofit;
-
-    static{
-        initOkHttpClient();
-    }
+    private static MemeService mMemeService;
 
     /**
      * 获取表情包
@@ -33,21 +27,17 @@ public class RetrofitHelper {
      * @return
      */
 
-    public static MemeService geMemeApi()
-    {
-        if(mRetrofit == null){
+    public static MemeService geMemeApi() {
+        if(mMemeService == null){
             synchronized (RetrofitHelper.class){
-                if(mRetrofit == null){
-                    mRetrofit = new Retrofit.Builder()
-                            .baseUrl(API_BASE_URL)
-                            .client(mOkHttpClient)
-                            .addConverterFactory(GsonConverterFactory.create())
-                            .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                            .build();
+                if(mMemeService == null){
+                    initOkHttpClient();
+                    mMemeService = getRetrofit().create(MemeService.class);
                 }
             }
-        }
-        return mRetrofit.create(MemeService.class);
+        } return mMemeService;
+
+
     }
 
     /**
@@ -55,32 +45,31 @@ public class RetrofitHelper {
      * 设置缓存
      * 设置超时时间
      */
-    private static void initOkHttpClient()
-    {
-
+    private static void initOkHttpClient() {
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-        if (mOkHttpClient == null)
-        {
-            synchronized (RetrofitHelper.class)
-            {
-                if (mOkHttpClient == null)
-                {
-                    //设置Http缓存
-                    Cache cache = new Cache(new File(BaseApplication.getInstance()
-                            .getCacheDir(), "HttpCache"), 1024 * 1024 * 100);
+        //设置Http缓存
+        Cache cache = new Cache(new File(BaseApplication.getInstance()
+                .getCacheDir(), "HttpCache"), 1024 * 1024 * 100);
 
-                    mOkHttpClient = new OkHttpClient.Builder()
-                            .cache(cache)
-                            .addInterceptor(interceptor)
-                            .addNetworkInterceptor(new StethoInterceptor())
-                            .retryOnConnectionFailure(true)
-                            .connectTimeout(30, TimeUnit.SECONDS)
-                            .writeTimeout(20, TimeUnit.SECONDS)
-                            .readTimeout(20, TimeUnit.SECONDS)
-                            .build();
-                }
-            }
-        }
+        mOkHttpClient = new OkHttpClient.Builder()
+                .cache(cache)
+                .addInterceptor(interceptor)
+                .addNetworkInterceptor(new StethoInterceptor())
+                .retryOnConnectionFailure(true)
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .build();
+    }
+
+    private static Retrofit getRetrofit() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(API_BASE_URL)
+                .client(mOkHttpClient)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .build();
+        return  retrofit;
     }
 }

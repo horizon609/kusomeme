@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static android.R.attr.path;
+import static android.R.attr.x;
 import static com.facebook.stetho.common.LogUtil.e;
 
 /**
@@ -50,27 +52,30 @@ public class DownLoadHelper {
         runOnQueue(service);
     }
 
-    public static void saveImageToGallery(Context context, File memeFile, String fileName) {
+    public static void saveImageToGallery(Context context, File memeFile, String fileName) throws IOException {
         File path = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES);
         if (!path.exists()) {
             path.mkdir();
         }
         File file = new File(path, fileName);
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+
         try {
-            byte [] b = new byte[1024];
-            FileInputStream fis = new FileInputStream(memeFile);
-            FileOutputStream fos = new FileOutputStream(file);
-            while (fis.read(b)!=-1){
+            byte[] b = new byte[2048];
+            fis = new FileInputStream(memeFile);
+            fos = new FileOutputStream(file);
+            while (fis.read(b) != -1) {
                 fos.write(b);
             }
-            fos.flush();
-            fos.close();
-            fis.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } finally {
+            if (fos != null)
+                fos.flush();
+            if (fis != null)
+                fis.close();
         }
 
         MediaScannerConnection.scanFile(context,

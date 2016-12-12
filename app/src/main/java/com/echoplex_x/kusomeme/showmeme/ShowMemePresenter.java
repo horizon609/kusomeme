@@ -12,11 +12,14 @@ import com.echoplex_x.kusomeme.network.RetrofitHelper;
 import com.echoplex_x.kusomeme.utils.DownLoadHelper;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
+
+import static android.R.attr.path;
 
 /**
  * Created by Win10-PC on 2016/11/28.
@@ -62,8 +65,12 @@ public class ShowMemePresenter implements ShowMemeContract.Presenter {
                 Log.d(TAG,Thread.currentThread().getName()+": 准备现实toast");
                 //TODO:这里把图片保存在/storage/emulated/0/Pictures/下，可以立即刷新gallery中的图片，而在自己新建的的外部路径下无法立即更新，后续解决
                 //使用google示例https://developer.android.com/reference/android/os/Environment.html#getExternalStoragePublicDirectory%28java.lang.String%29
-                DownLoadHelper.saveImageToGallery(mContext
-                        , file,fileName);
+                try {
+                    DownLoadHelper.saveImageToGallery(mContext
+                            , file,fileName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 mContext.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
